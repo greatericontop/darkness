@@ -96,6 +96,10 @@ class Game:
         self.board = Board(None)
         generator.fill(self.board, BOARD_SIZE)
 
+    def end_game(self, win: bool) -> None:
+        self.playing = Playing.ENDING_WIN if win else Playing.ENDING_LOSE
+        self.display_menu()
+
     def tick_loop(self) -> None:
         """Tick loop."""
         if self.playing == Playing.GAME:
@@ -177,34 +181,33 @@ class Game:
         walls_to_check = []
         if not connections[D.LEFT]:
             walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y, cell_y + CELL_SIZE))
+        walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y, cell_y + OPENING_BUFFER_SIZE))
+        walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
+        if not connections[D.RIGHT]:
+            walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + CELL_SIZE))
+        walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + OPENING_BUFFER_SIZE))
+        walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
         if not connections[D.UP]:
             walls_to_check.append((cell_x, cell_x + CELL_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
+        walls_to_check.append((cell_x, cell_x + OPENING_BUFFER_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
+        walls_to_check.append((cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
+        if not connections[D.DOWN]:
+            walls_to_check.append((cell_x, cell_x + CELL_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
+        walls_to_check.append((cell_x, cell_x + OPENING_BUFFER_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
+        walls_to_check.append((cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
 
-
-
-
-
-
-
-
-
-
-        # Check each wall in sequence.
-        # LEFT
-        wall_x_min = cell_x - THICKNESS  # the leftmost x-coord of the left wall of the cell
-        wall_x_max = cell_x + THICKNESS  # the rightmost x-coord of the left wall of the cell
-        # Note: Here, the wall will be halfway through the center. It really doesn't matter because it is the
-        #     middle part of the wall (we can add or subtract thickness, it won't make a difference).
-        wall_y_min = cell_y
-        wall_y_max = cell_y + CELL_SIZE
-        # Rectangle intersection
-        intersecting = not (
-                x_max < wall_x_min or x_min > wall_x_max
-                or y_max < wall_y_min or y_min > wall_y_max
-        )
-        if intersecting:
-            if self.x_velocity ** 2 + self.y_velocity ** 2 >= 0.25:
-                # If the Euclidean velocity is >=0.5, reduce by half and try again.
+        has_intersected = False
+        for wall_x_min, wall_x_max, wall_y_min, wall_y_max in walls_to_check:
+            intersecting = not (
+                    x_max < wall_x_min or x_min > wall_x_max
+                    or y_max < wall_y_min or y_min > wall_y_max
+            )
+            if intersecting:
+                has_intersected = True
+                break
+        if has_intersected:  # We'll apply physics if at least one collision failed its check.
+            if self.x_velocity**2 + self.y_velocity**2 >= 0.16:
+                # If the Euclidean velocity is >=0.4, reduce by half and try again.
                 self.x_velocity *= 0.5
                 self.y_velocity *= 0.5
                 self.do_physics()  # Do this again, since this function modifies the velocity.
@@ -212,61 +215,10 @@ class Game:
                 # If it's negligible, simply stop.
                 self.x_velocity = 0
                 self.y_velocity = 0
-        # RIGHT
-        wall_x_min = cell_x + CELL_SIZE - THICKNESS
-        wall_x_max = cell_x + CELL_SIZE + THICKNESS
-        wall_y_min = cell_y
-        wall_y_max = cell_y + CELL_SIZE
-        intersecting = not (
-                x_max < wall_x_min or x_min > wall_x_max
-                or y_max < wall_y_min or y_min > wall_y_max
-        )
-        if intersecting:
-            if self.x_velocity ** 2 + self.y_velocity ** 2 >= 0.25:
-                self.x_velocity *= 0.5
-                self.y_velocity *= 0.5
-                self.do_physics()
-            else:
-                self.x_velocity = 0
-                self.y_velocity = 0
-        # UP
-        wall_x_min = cell_x
-        wall_x_max = cell_x + CELL_SIZE
-        wall_y_min = cell_y - THICKNESS
-        wall_y_max = cell_y + THICKNESS
-        intersecting = not (
-                x_max < wall_x_min or x_min > wall_x_max
-                or y_max < wall_y_min or y_min > wall_y_max
-        )
-        if intersecting:
-            wall_x_min = cell_x + OPENING_BUFFER_SIZE + 2*PLAYER_SIZE
-            wall_x_max = cell_x + CELL_SIZE - OPENING_BUFFER_SIZE - 2*PLAYER_SIZE
-            if x_max < wall_x_min or x_min > wall_x_max or y_max < wall_y_min or y_min > wall_y_max:
-                if self.x_velocity ** 2 + self.y_velocity ** 2 >= 0.25:
-                    self.x_velocity *= 0.5
-                    self.y_velocity *= 0.5
-                    self.do_physics()
-                else:
-                    self.x_velocity = 0
-                    self.y_velocity = 0
-        # DOWN
-        wall_x_min = cell_x
-        wall_x_max = cell_x + CELL_SIZE
-        wall_y_min = cell_y + CELL_SIZE - THICKNESS
-        wall_y_max = cell_y + CELL_SIZE + THICKNESS
-        intersecting = not (
-                x_max < wall_x_min or x_min > wall_x_max
-                or y_max < wall_y_min or y_min > wall_y_max
-        )
-        if intersecting:
-            wall_x_min = cell_x + OPENING_BUFFER_SIZE + 2 * PLAYER_SIZE
-            wall_x_max = cell_x + CELL_SIZE - OPENING_BUFFER_SIZE - 2 * PLAYER_SIZE
-            if x_max < wall_x_min or x_min > wall_x_max or y_max < wall_y_min or y_min > wall_y_max:
-                if self.x_velocity ** 2 + self.y_velocity ** 2 >= 0.25:
-                    self.x_velocity *= 0.5
-                    self.y_velocity *= 0.5
-                    self.do_physics()
-                else:
-                    self.x_velocity = 0
-                    self.y_velocity = 0
+
+
+
+
+
+
 
