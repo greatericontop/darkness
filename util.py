@@ -13,3 +13,8 @@ def clear_board(canvas: pygame.Surface):
 def draw_centered_text(canvas: pygame.Surface, text: pygame.Surface, x: float, y: float) -> None:
     text_rect = text.get_rect()
     canvas.blit(text, (x - text_rect.width / 2, y - text_rect.height / 2))
+
+
+def draw_right_align_text(canvas: pygame.Surface, text: pygame.Surface, x: float, y: float) -> None:
+    text_rect = text.get_rect()
+    canvas.blit(text, (x - text_rect.width, y))

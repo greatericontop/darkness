@@ -21,7 +21,7 @@ class Main:
     x_size: int = 1280
     y_size: int = 720
 
-    number_tick: int = field(init=False, default=None)
+    number_tick: int = 0
 
     @property
     def x_center(self) -> int:
@@ -41,6 +41,7 @@ class Main:
         game.display_menu()
 
         while True:
+            self.number_tick += 1
             pygame.display.update()
             clock.tick(self.TPS)
             for event in pygame.event.get():
@@ -52,6 +53,7 @@ class Main:
                     self.y_size = event.h
                 game.handle_event(event)
             game.tick_loop()
+
 
 if __name__ == '__main__':
     Main().main()

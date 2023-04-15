@@ -3,16 +3,12 @@ from __future__ import annotations
 import dataclasses
 import random
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import pygame
 
 import game
 import util
 from entity.base import BaseEntity
-
-if TYPE_CHECKING:
-    from game import Game
 
 
 @dataclass

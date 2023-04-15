@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 import math
 
 import pygame.sprite
+
+if TYPE_CHECKING:
+    from game import Game
 
 
 @dataclass

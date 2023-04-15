@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+import util
 from mazegen import generator
 from mazegen.game_structures import Board, D
 from entity.monster import Monster
@@ -40,6 +41,9 @@ class Game:
     main: Main
     canvas: pygame.Surface
     playing: Playing = dataclasses.field(init=False, default=Playing.MENU)
+    monsters: list = dataclasses.field(init=False, default=None)
+
+    tick_start: int = dataclasses.field(init=False, default=None)
 
     board: Board = dataclasses.field(init=False)
 
@@ -50,10 +54,12 @@ class Game:
 
     font_42: pygame.font.Font = dataclasses.field(init=False)
     font_60: pygame.font.Font = dataclasses.field(init=False)
+    font_16_nerd: pygame.font.Font = dataclasses.field(init=False)
 
     def __post_init__(self):
         self.font_42 = pygame.font.Font('assets/liberationserif.ttf', 42)
         self.font_60 = pygame.font.Font('assets/liberationserif.ttf', 60)
+        self.font_16_nerd = pygame.font.Font('assets/jetbrainsmononerd.ttf', 16)
 
     @property
     def start_rect(self) -> pygame.Rect:
@@ -93,15 +99,17 @@ class Game:
                     sys.exit(0)
 
     def run_game(self) -> None:
+        self.tick_start = self.main.number_tick
         self.playing = Playing.GAME
         self.board = Board()
         generator.fill(self.board, BOARD_SIZE)
         spawn_x = random.randrange(BOARD_SIZE)
         spawn_y = random.randrange(BOARD_SIZE)
-        self.player_x = spawn_x*CELL_SIZE + CELL_SIZE//2
-        self.player_y = spawn_y*CELL_SIZE + CELL_SIZE//2
+        self.player_x = spawn_x * CELL_SIZE + CELL_SIZE // 2
+        self.player_y = spawn_y * CELL_SIZE + CELL_SIZE // 2
         self.x_velocity = 0.0
         self.y_velocity = 0.0
+        self.monsters = [Monster(game=self, _x=-1.0, _y=-1.0), Monster(game=self, _x=-1.0, _y=-1.0)]
 
     def end_game(self, win: bool) -> None:
         self.playing = Playing.ENDING_WIN if win else Playing.ENDING_LOSE
@@ -111,9 +119,6 @@ class Game:
         """Tick loop."""
         if self.playing == Playing.GAME:
             self.tick_game()
-
-    def entity_event(self):
-        ...
 
     @property
     def alignment_x(self) -> float:
@@ -157,18 +162,33 @@ class Game:
                 x_c = int(x * CELL_SIZE + self.alignment_x)
                 y_c = int(y * CELL_SIZE + self.alignment_y)
                 cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else 0x707070
-                pygame.draw.rect(self.canvas, cell_color, pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2*THICKNESS, CELL_SIZE - 2*THICKNESS))
+                pygame.draw.rect(self.canvas, cell_color,
+                                 pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2 * THICKNESS,
+                                             CELL_SIZE - 2 * THICKNESS))
                 # Left sided edge
                 if self.board.board[x][y].connections[D.LEFT]:
                     pygame.draw.rect(self.canvas, 0x707070,
-                                     pygame.Rect(x_c-THICKNESS, y_c+OPENING_BUFFER_SIZE, 2*THICKNESS, CELL_SIZE-2*OPENING_BUFFER_SIZE))
+                                     pygame.Rect(x_c - THICKNESS, y_c + OPENING_BUFFER_SIZE, 2 * THICKNESS,
+                                                 CELL_SIZE - 2 * OPENING_BUFFER_SIZE))
                 # Top sided edge
                 if self.board.board[x][y].connections[D.UP]:
                     pygame.draw.rect(self.canvas, 0x707070,
-                                     pygame.Rect(x_c+OPENING_BUFFER_SIZE, y_c-THICKNESS, CELL_SIZE-2*OPENING_BUFFER_SIZE, 2*THICKNESS))
+                                     pygame.Rect(x_c + OPENING_BUFFER_SIZE, y_c - THICKNESS,
+                                                 CELL_SIZE - 2 * OPENING_BUFFER_SIZE, 2 * THICKNESS))
         # Player
-        pygame.draw.rect(self.canvas, 0xff00ff, pygame.Rect(self.main.x_center-PLAYER_SIZE, self.main.y_center-PLAYER_SIZE, 2*PLAYER_SIZE, 2*PLAYER_SIZE))
+        pygame.draw.rect(self.canvas, 0xff00ff,
+                         pygame.Rect(self.main.x_center - PLAYER_SIZE, self.main.y_center - PLAYER_SIZE,
+                                     2 * PLAYER_SIZE, 2 * PLAYER_SIZE))
 
+        for x in self.monsters:
+            x.tick()
+
+        if self.tick_start:
+            ticks_passed = self.main.number_tick - self.tick_start
+            seconds = ticks_passed // self.main.TPS
+            time_text = f'\uf64f {seconds // 60:02d}:{seconds % 60:02d}'
+            util.draw_right_align_text(self.canvas, self.font_16_nerd.render(time_text, True, 0xffffff),
+                                       self.main.x_size - 5, 5)
 
     def do_physics(self):
         x_before, y_before = self.player_x, self.player_y
@@ -190,19 +210,27 @@ class Game:
         if not connections[D.LEFT]:
             walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y, cell_y + CELL_SIZE))
         walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y, cell_y + OPENING_BUFFER_SIZE))
-        walls_to_check.append((cell_x - THICKNESS, cell_x + THICKNESS, cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
+        walls_to_check.append(
+            (cell_x - THICKNESS, cell_x + THICKNESS, cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
         if not connections[D.RIGHT]:
-            walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + CELL_SIZE))
-        walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + OPENING_BUFFER_SIZE))
-        walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
+            walls_to_check.append(
+                (cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + CELL_SIZE))
+        walls_to_check.append(
+            (cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS, cell_y, cell_y + OPENING_BUFFER_SIZE))
+        walls_to_check.append((cell_x + CELL_SIZE - THICKNESS, cell_x + CELL_SIZE + THICKNESS,
+                               cell_y + CELL_SIZE - OPENING_BUFFER_SIZE, cell_y + CELL_SIZE))
         if not connections[D.UP]:
             walls_to_check.append((cell_x, cell_x + CELL_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
         walls_to_check.append((cell_x, cell_x + OPENING_BUFFER_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
-        walls_to_check.append((cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
+        walls_to_check.append(
+            (cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE, cell_y - THICKNESS, cell_y + THICKNESS))
         if not connections[D.DOWN]:
-            walls_to_check.append((cell_x, cell_x + CELL_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
-        walls_to_check.append((cell_x, cell_x + OPENING_BUFFER_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
-        walls_to_check.append((cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
+            walls_to_check.append(
+                (cell_x, cell_x + CELL_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
+        walls_to_check.append(
+            (cell_x, cell_x + OPENING_BUFFER_SIZE, cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
+        walls_to_check.append((cell_x + CELL_SIZE - OPENING_BUFFER_SIZE, cell_x + CELL_SIZE,
+                               cell_y + CELL_SIZE - THICKNESS, cell_y + CELL_SIZE + THICKNESS))
 
         has_intersected = False
         for wall_x_min, wall_x_max, wall_y_min, wall_y_max in walls_to_check:
@@ -214,7 +242,7 @@ class Game:
                 has_intersected = True
                 break
         if has_intersected:  # We'll apply physics if at least one collision failed its check.
-            if self.x_velocity**2 + self.y_velocity**2 >= 0.16:
+            if self.x_velocity ** 2 + self.y_velocity ** 2 >= 0.16:
                 # If the Euclidean velocity is >=0.4, reduce by half and try again.
                 self.x_velocity *= 0.5
                 self.y_velocity *= 0.5
@@ -223,10 +251,3 @@ class Game:
                 # If it's negligible, simply stop.
                 self.x_velocity = 0
                 self.y_velocity = 0
-
-
-
-
-
-
-
