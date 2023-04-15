@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 TITLE_W = 240
 TITLE_H = 35
-BOARD_SIZE = 9
+BOARD_SIZE = 24
 THICKNESS = 10
 CELL_SIZE = 440
 OPENING_BUFFER_SIZE = THICKNESS + 135
@@ -111,6 +111,9 @@ class Game:
         self.y_velocity = 0.0
         self.monsters = [
             Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.0+1.0*random.random()),  # 2.0 to 3.0
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
             Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
         ]
 
