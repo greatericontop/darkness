@@ -13,6 +13,8 @@ from entity.base import BaseEntity
 
 @dataclass
 class Monster(BaseEntity):
+    speed: float
+
     next_target_x: int = dataclasses.field(init=False)
     next_target_y: int = dataclasses.field(init=False)
 
@@ -59,8 +61,8 @@ class Monster(BaseEntity):
         direction_y = target_y_c - self.y
         normalize = (direction_x**2 + direction_y**2) ** 0.5
         # the coefficient is the speed
-        direction_x *= 2.6 / normalize
-        direction_y *= 2.6 / normalize
+        direction_x *= self.speed / normalize
+        direction_y *= self.speed / normalize
         self._x += direction_x
         self._y += direction_y
         if abs(self.x - target_x_c) < 5.0 and abs(self.y - target_y_c) < 5.0:
@@ -77,4 +79,3 @@ class Monster(BaseEntity):
         rect = pygame.Rect(self.x-game.CELL_SIZE//2, self.y-game.CELL_SIZE//2, game.CELL_SIZE, game.CELL_SIZE)
         if rect.collidepoint(self.game.player_x, self.game.player_y):
             self.on_touch()
-

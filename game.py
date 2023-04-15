@@ -75,7 +75,7 @@ class Game:
             color = 0x00ff00ff
         elif self.playing == Playing.ENDING_LOSE:
             text = 'YOU LOSE!'
-            color = 0xffffffff
+            color = 0xff0000ff
         else:
             text = 'DARKNESS: THE ESCAPE'
             color = 0xffffffff
@@ -109,7 +109,10 @@ class Game:
         self.player_y = spawn_y * CELL_SIZE + CELL_SIZE // 2
         self.x_velocity = 0.0
         self.y_velocity = 0.0
-        self.monsters = [Monster(game=self, _x=-1.0, _y=-1.0), Monster(game=self, _x=-1.0, _y=-1.0)]
+        self.monsters = [
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+        ]
 
     def end_game(self, win: bool) -> None:
         self.playing = Playing.ENDING_WIN if win else Playing.ENDING_LOSE
@@ -187,7 +190,7 @@ class Game:
             ticks_passed = self.main.number_tick - self.tick_start
             seconds = ticks_passed // self.main.TPS
             time_text = f'\uf64f {seconds // 60:02d}:{seconds % 60:02d}'
-            util.draw_right_align_text(self.canvas, self.font_16_nerd.render(time_text, True, 0xffffff),
+            util.draw_right_align_text(self.canvas, self.font_16_nerd.render(time_text, True, 0x00ffffff),
                                        self.main.x_size - 5, 5)
 
     def do_physics(self):
