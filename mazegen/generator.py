@@ -38,10 +38,12 @@ def fill(board: Board, size: int):
         # Potentially quit if the edge is connected (redundant)
         if next_edge.node1.tuple() in visited_nodes and next_edge.node2.tuple() in visited_nodes:
             # if it's a redundant edge including the root node, always skip
+            # note that this doesn't mean there's only one path to the exit, because a non-redundant edge
+            #   could have been added naturally
             if next_edge.node1.tuple() == root_node.tuple() or next_edge.node2.tuple() == root_node.tuple():
                 continue
             # normal loop/cycle, percentage to skip
-            if random.random() <= 0.72718281828:  # TODO: you put a TOTALLY arbitrary number here
+            if random.random() <= 0.88:  # TODO: you put a TOTALLY arbitrary number here
                 continue
         if next_edge.node1.tuple() in visited_nodes:
             unvisited_node = next_edge.node2
