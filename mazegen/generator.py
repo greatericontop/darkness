@@ -26,10 +26,16 @@ def fill(board: Board, size: int):
     board_edges: list[tuple[int, int, int, int]] = []
     visited_nodes: set[tuple[int, int]] = set()  # We are NOT using :Node:s here because they're mutable and unhashable
     available_edges: set[Edge] = set()
-    root_node = board.board[0][0]  # TODO: ROOT NODE SHOULD BE A RANDOM NODE (ON THE EDGE)
+    root_node = board.board[random.randrange(size)][random.randrange(size)]
+    board.maze_exit_x = root_node.x
+    board.maze_exit_y = root_node.y
     visited_nodes.add(root_node.tuple())
-    available_edges.add(board.get_edge(0, 0, 0, 1))
-    available_edges.add(board.get_edge(0, 0, 1, 0))
+    for dx, dy in zip(util.D_X, util.D_Y):
+        x1 = root_node.x + dx
+        y1 = root_node.y + dy
+        if x1 < 0 or y1 < 0 or x1 >= size or y1 >= size:  # edge leads to a nonexistent place
+            continue
+        available_edges.add(board.get_edge(root_node.x, root_node.y, x1, y1))
 
     while True:
         # Get edge

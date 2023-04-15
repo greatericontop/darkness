@@ -12,8 +12,7 @@ from game import Game
 
 __version__ = '1.0.0'
 
-# WINDOW_FLAGS = pygame.RESIZABLE
-WINDOW_FLAGS = 0
+WINDOW_FLAGS = pygame.RESIZABLE
 
 
 @dataclass
@@ -53,7 +52,6 @@ class Main:
                     self.y_size = event.h
                 game.handle_event(event)
             game.tick_loop()
-
 
 if __name__ == '__main__':
     Main().main()

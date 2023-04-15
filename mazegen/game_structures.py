@@ -45,7 +45,9 @@ class Edge:
 
 @dataclass
 class Board:
-    board: list[list[Node]]
+    board: list[list[Node]] = dataclasses.field(init=False)
+    maze_exit_x: int = dataclasses.field(init=False)
+    maze_exit_y: int = dataclasses.field(init=False)
 
     def get_edge(self, x1: int, y1: int, x2: int, y2: int):
         """Convenience method to get an edge."""

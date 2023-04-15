@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import random
 from dataclasses import dataclass
 import enum
 import sys
@@ -12,6 +13,7 @@ import pygame
 
 from mazegen import generator
 from mazegen.game_structures import Board, D
+from entity.monster import Monster
 from util import clear_board, draw_centered_text
 
 if TYPE_CHECKING:
@@ -19,10 +21,10 @@ if TYPE_CHECKING:
 
 TITLE_W = 240
 TITLE_H = 35
-BOARD_SIZE = 20
-THICKNESS = 8
-CELL_SIZE = 360
-OPENING_BUFFER_SIZE = THICKNESS + 115
+BOARD_SIZE = 9
+THICKNESS = 10
+CELL_SIZE = 440
+OPENING_BUFFER_SIZE = THICKNESS + 135
 PLAYER_SIZE = 15
 
 
@@ -41,8 +43,8 @@ class Game:
 
     board: Board = dataclasses.field(init=False)
 
-    player_x: float = dataclasses.field(init=False, default=100.0)
-    player_y: float = dataclasses.field(init=False, default=100.0)
+    player_x: float = dataclasses.field(init=False, default=0.0)
+    player_y: float = dataclasses.field(init=False, default=0.0)
     x_velocity: float = dataclasses.field(init=False, default=0.0)
     y_velocity: float = dataclasses.field(init=False, default=0.0)
 
@@ -62,7 +64,6 @@ class Game:
         return pygame.Rect(self.main.x_center - TITLE_W, 380 - TITLE_H, 2 * TITLE_W, 2 * TITLE_H)
 
     def display_menu(self):
-
         if self.playing == Playing.ENDING_WIN:
             text = 'YOU WIN!'
             color = 0x00ff00ff
@@ -93,8 +94,14 @@ class Game:
 
     def run_game(self) -> None:
         self.playing = Playing.GAME
-        self.board = Board(None)
+        self.board = Board()
         generator.fill(self.board, BOARD_SIZE)
+        spawn_x = random.randrange(BOARD_SIZE)
+        spawn_y = random.randrange(BOARD_SIZE)
+        self.player_x = spawn_x*CELL_SIZE + CELL_SIZE//2
+        self.player_y = spawn_y*CELL_SIZE + CELL_SIZE//2
+        self.x_velocity = 0.0
+        self.y_velocity = 0.0
 
     def end_game(self, win: bool) -> None:
         self.playing = Playing.ENDING_WIN if win else Playing.ENDING_LOSE
@@ -104,6 +111,17 @@ class Game:
         """Tick loop."""
         if self.playing == Playing.GAME:
             self.tick_game()
+
+    def entity_event(self):
+        ...
+
+    @property
+    def alignment_x(self) -> float:
+        return self.main.x_center - self.player_x
+
+    @property
+    def alignment_y(self) -> float:
+        return self.main.y_center - self.player_y
 
     def tick_game(self) -> None:
         """Game tick loop."""
@@ -121,46 +139,36 @@ class Game:
         self.x_velocity *= 0.93
         self.y_velocity *= 0.93
 
-
         # Rectangular collision physics
-        # Find extreme bounding box of movement
         self.do_physics()
-
-
         self.player_x += self.x_velocity
         self.player_y += self.y_velocity
 
+        cell_x = int(self.player_x / CELL_SIZE)
+        cell_y = int(self.player_y / CELL_SIZE)
+        if cell_x == self.board.maze_exit_x and cell_y == self.board.maze_exit_y:
+            self.end_game(True)
+            return
+
         # Rendering
         clear_board(self.canvas)
-        # Alignment is the offset of the top-left (0,0) corner of the map.
-        alignment_x = self.main.x_center - self.player_x
-        alignment_y = self.main.y_center - self.player_y
-
         for x in range(BOARD_SIZE):
             for y in range(BOARD_SIZE):
-                x_c = int(x * CELL_SIZE + alignment_x)
-                y_c = int(y * CELL_SIZE + alignment_y)
-                pygame.draw.rect(self.canvas, 0xc0c0c0, pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2*THICKNESS, CELL_SIZE - 2*THICKNESS))
+                x_c = int(x * CELL_SIZE + self.alignment_x)
+                y_c = int(y * CELL_SIZE + self.alignment_y)
+                cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else 0x707070
+                pygame.draw.rect(self.canvas, cell_color, pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2*THICKNESS, CELL_SIZE - 2*THICKNESS))
                 # Left sided edge
                 if self.board.board[x][y].connections[D.LEFT]:
-                    pygame.draw.rect(self.canvas, 0xc0c0c0,
+                    pygame.draw.rect(self.canvas, 0x707070,
                                      pygame.Rect(x_c-THICKNESS, y_c+OPENING_BUFFER_SIZE, 2*THICKNESS, CELL_SIZE-2*OPENING_BUFFER_SIZE))
                 # Top sided edge
                 if self.board.board[x][y].connections[D.UP]:
-                    pygame.draw.rect(self.canvas, 0xc0c0c0,
+                    pygame.draw.rect(self.canvas, 0x707070,
                                      pygame.Rect(x_c+OPENING_BUFFER_SIZE, y_c-THICKNESS, CELL_SIZE-2*OPENING_BUFFER_SIZE, 2*THICKNESS))
-        # fat player (just like you)
+        # Player
         pygame.draw.rect(self.canvas, 0xff00ff, pygame.Rect(self.main.x_center-PLAYER_SIZE, self.main.y_center-PLAYER_SIZE, 2*PLAYER_SIZE, 2*PLAYER_SIZE))
 
-        #
-        # A "cell" will be 160 pixels (a square)
-        # You should draw lines (rectangles) to divide the cells
-        # The player should always appear in the middle
-        # Basically, you should align the **BACKGROUND** such that the player appears in the middle.
-        #    When player at x=40, y=40 the player appears in the middle of the 0,0 cell.
-        #    When player at x=120, y=120 the player appears in the middle of the 120,120 cell.
-        #    And so on.
-        #
 
     def do_physics(self):
         x_before, y_before = self.player_x, self.player_y
