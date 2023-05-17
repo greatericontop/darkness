@@ -60,6 +60,8 @@ class Monster(BaseEntity):
         direction_x = target_x_c - self.x
         direction_y = target_y_c - self.y
         normalize = (direction_x**2 + direction_y**2) ** 0.5
+        if normalize < 0.01:
+            raise RuntimeError(f'distance was too small ({normalize} < 0.01) - the monster probably spawned on the player')
         # the coefficient is the speed
         direction_x *= self.speed / normalize
         direction_y *= self.speed / normalize
