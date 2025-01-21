@@ -16,8 +16,9 @@ class Node:
     x: int
     y: int
     connections: list[bool, bool, bool, bool] = dataclasses.field(init=False, default_factory=lambda: [False, False, False, False])
+    power: int = dataclasses.field(init=False, default=-1)
 
-    def tuple(self) -> tuple:
+    def tuple(self) -> tuple[int, int]:
         return self.x, self.y
 
     def __repr__(self):

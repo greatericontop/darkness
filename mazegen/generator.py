@@ -87,3 +87,55 @@ def fill(board: Board, size: int):
         elif x1 == x2 and y1-1 == y2:
             board.board[x1][y1].connections[D.UP] = True
             board.board[x2][y2].connections[D.DOWN] = True
+
+    # Next, we will set the power (color) of each node
+    # This is a weird iterative deepening search.
+    # Algorithm:
+    #   Goal node has a power of 20; mark as visited
+    #   Add the neighbors to the CURRENT queue
+    #   Loop while CURRENT queue is not empty:
+    #       Shuffle CURRENT queue
+    #       Loop every node in the CURRENT queue:
+    #           Power := max( 25% chance to -1, 75% chance to -2 from each adjacent visited node ); mark as visited
+    #           If power <= 0: power = 0
+    #           Add neighbors to NEXT queue (if not visited - eventually we will get to all of them)
+    #           Mark as visited
+    #       NEXT queue becomes CURRENT queue
+    visited_nodes = set()
+    exit_node = board.board[board.maze_exit_x][board.maze_exit_y]
+    exit_node.power = 20
+    visited_nodes.add(exit_node.tuple())
+    # Add neighbors
+    current_queue: list[Node] = []
+    for dx, dy in zip(util.D_X, util.D_Y):
+        x1 = board.maze_exit_x + dx
+        y1 = board.maze_exit_y + dy
+        if x1 < 0 or y1 < 0 or x1 >= size or y1 >= size:  # edge leads to a nonexistent place
+            continue
+        current_queue.append(board.board[x1][y1])
+    # Loop
+    while current_queue:
+        random.shuffle(current_queue)
+        next_queue: list[Node] = []
+        for node in current_queue:
+            # Power (check each neighbor)
+            for dx, dy in zip(util.D_X, util.D_Y):
+                x1 = node.x + dx
+                y1 = node.y + dy
+                if x1 < 0 or y1 < 0 or x1 >= size or y1 >= size:
+                    continue
+                neighbor = board.board[x1][y1]
+                if neighbor.tuple() in visited_nodes:
+                    node.power = max(0, node.power, neighbor.power - (1 if random.random() < 0.25 else 2))
+            # Add neighbors
+            for dx, dy in zip(util.D_X, util.D_Y):
+                x1 = node.x + dx
+                y1 = node.y + dy
+                if x1 < 0 or y1 < 0 or x1 >= size or y1 >= size:
+                    continue
+                neighbor = board.board[x1][y1]
+                if neighbor.tuple() in visited_nodes or neighbor in next_queue:
+                    continue
+                next_queue.append(neighbor)
+            visited_nodes.add(node.tuple())
+        current_queue = next_queue.copy()
