@@ -49,7 +49,7 @@ def fill(board: Board, size: int):
             if next_edge.node1.tuple() == root_node.tuple() or next_edge.node2.tuple() == root_node.tuple():
                 continue
             # normal loop/cycle, percentage to skip
-            if random.random() <= 0.88:  # TODO: you put a TOTALLY arbitrary number here
+            if random.random() <= 0.885:  # (higher makes the game harder by reducing the number of open edges)
                 continue
         if next_edge.node1.tuple() in visited_nodes:
             unvisited_node = next_edge.node2
