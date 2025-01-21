@@ -128,7 +128,7 @@ def fill(board: Board, size: int):
                 neighbor = board.board[x1][y1]
                 if neighbor.tuple() in visited_nodes:
                     max_neighbor_power = max(max_neighbor_power, neighbor.power)
-            node.power = max(0, max_neighbor_power - (1 if random.random() < 0.40 else 0))
+            node.power = max(0, max_neighbor_power - (1 if random.random() < 0.45 else 0))
             # Add neighbors
             for dx, dy in zip(util.D_X, util.D_Y):
                 x1 = node.x + dx

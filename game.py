@@ -111,11 +111,11 @@ class Game:
         self.x_velocity = 0.0
         self.y_velocity = 0.0
         self.monsters = [
-            #Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
-            #Monster(game=self, _x=-1.0, _y=-1.0, speed=2.0+1.0*random.random()),  # 2.0 to 3.0
-            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
-            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
-            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.0+1.0*random.random()),  # 2.0 to 3.0
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
         ]
 
     def end_game(self, win: bool) -> None:
