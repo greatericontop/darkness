@@ -28,6 +28,9 @@ class Node:
             return 0x808080
         return 0x606060
 
+    def is_darkest(self) -> bool:
+        return self.color() == 0x606060
+
     def __repr__(self):
         return f'Node({self.x}, {self.y})'
 

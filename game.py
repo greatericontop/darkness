@@ -103,9 +103,19 @@ class Game:
         self.tick_start = self.main.number_tick
         self.playing = Playing.GAME
         self.board = Board()
-        generator.fill(self.board, BOARD_SIZE)
-        spawn_x = random.randrange(BOARD_SIZE)
-        spawn_y = random.randrange(BOARD_SIZE)
+        for _ in range(100):
+            generator.fill(self.board, BOARD_SIZE)
+            # Make up to 60 attempts to spawn in a dark square
+            for i in range(60):
+                spawn_x = random.randrange(BOARD_SIZE)
+                spawn_y = random.randrange(BOARD_SIZE)
+                if self.board.board[spawn_x][spawn_y].is_darkest():
+                    break
+            number = 0
+            for x in range(BOARD_SIZE):
+                for y in range(BOARD_SIZE):
+                    if self.board.board[x][y].is_darkest(): number += 1
+            print(f'Attempts x{i} with {number} darkests')
         self.player_x = spawn_x * CELL_SIZE + CELL_SIZE // 2
         self.player_y = spawn_y * CELL_SIZE + CELL_SIZE // 2
         self.x_velocity = 0.0
