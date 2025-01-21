@@ -24,9 +24,10 @@ TITLE_W = 240
 TITLE_H = 35
 BOARD_SIZE = 24
 THICKNESS = 10
-CELL_SIZE = 440
-OPENING_BUFFER_SIZE = THICKNESS + 135
-PLAYER_SIZE = 15
+CELL_SIZE = 120 #from 440
+OPENING_BUFFER_SIZE = THICKNESS + 10 #from +135
+PLAYER_SIZE = 5 #from 15
+PLAYER_ACCEL = 0.25 #from 0.65
 
 
 class Playing(enum.Enum):
@@ -110,11 +111,11 @@ class Game:
         self.x_velocity = 0.0
         self.y_velocity = 0.0
         self.monsters = [
-            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
-            Monster(game=self, _x=-1.0, _y=-1.0, speed=2.0+1.0*random.random()),  # 2.0 to 3.0
-            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
-            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
-            Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            #Monster(game=self, _x=-1.0, _y=-1.0, speed=2.75+1.25*random.random()),  # 2.75 to 4.0
+            #Monster(game=self, _x=-1.0, _y=-1.0, speed=2.0+1.0*random.random()),  # 2.0 to 3.0
+            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
+            #Monster(game=self, _x=-1.0, _y=-1.0, speed=1.0+1.5*random.random()),  # 1.0 to 2.5
         ]
 
     def end_game(self, win: bool) -> None:
@@ -138,15 +139,14 @@ class Game:
         """Game tick loop."""
 
         # Movement
-        a = 0.65
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.y_velocity -= a
+            self.y_velocity -= PLAYER_ACCEL
         if pygame.key.get_pressed()[pygame.K_a]:
-            self.x_velocity -= a
+            self.x_velocity -= PLAYER_ACCEL
         if pygame.key.get_pressed()[pygame.K_s]:
-            self.y_velocity += a
+            self.y_velocity += PLAYER_ACCEL
         if pygame.key.get_pressed()[pygame.K_d]:
-            self.x_velocity += a
+            self.x_velocity += PLAYER_ACCEL
         self.x_velocity *= 0.93
         self.y_velocity *= 0.93
 
