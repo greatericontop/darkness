@@ -167,7 +167,14 @@ class Game:
             for y in range(BOARD_SIZE):
                 x_c = int(x * CELL_SIZE + self.alignment_x)
                 y_c = int(y * CELL_SIZE + self.alignment_y)
-                cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else 0x707070
+                power = self.board.board[x][y].power
+                if power >= 11:
+                    color = 0xa0a0a0
+                elif power >= 1:
+                    color = 0x808080
+                else:
+                    color = 0x606060
+                cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else color
                 pygame.draw.rect(self.canvas, cell_color,
                                  pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2 * THICKNESS,
                                              CELL_SIZE - 2 * THICKNESS))
