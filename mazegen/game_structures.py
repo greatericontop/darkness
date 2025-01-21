@@ -21,6 +21,13 @@ class Node:
     def tuple(self) -> tuple[int, int]:
         return self.x, self.y
 
+    def color(self) -> int:
+        if self.power >= 4:  # 4~6
+            return 0xa0a0a0
+        if self.power >= 1:  # 1~3
+            return 0x808080
+        return 0x606060
+
     def __repr__(self):
         return f'Node({self.x}, {self.y})'
 

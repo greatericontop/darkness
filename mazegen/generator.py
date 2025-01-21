@@ -91,19 +91,19 @@ def fill(board: Board, size: int):
     # Next, we will set the power (color) of each node
     # This is a weird iterative deepening search.
     # Algorithm:
-    #   Goal node has a power of 20; mark as visited
+    #   Goal node power is 6; mark as visited
     #   Add the neighbors to the CURRENT queue
     #   Loop while CURRENT queue is not empty:
     #       Shuffle CURRENT queue
     #       Loop every node in the CURRENT queue:
-    #           Power := max( 25% chance to -1, 75% chance to -2 from each adjacent visited node ); mark as visited
+    #           Power := max adjacent power - ( 20% chance to subtract 1 ); mark as visited
     #           If power <= 0: power = 0
     #           Add neighbors to NEXT queue (if not visited - eventually we will get to all of them)
     #           Mark as visited
     #       NEXT queue becomes CURRENT queue
     visited_nodes = set()
     exit_node = board.board[board.maze_exit_x][board.maze_exit_y]
-    exit_node.power = 20
+    exit_node.power = 6
     visited_nodes.add(exit_node.tuple())
     # Add neighbors
     current_queue: list[Node] = []
@@ -118,7 +118,8 @@ def fill(board: Board, size: int):
         random.shuffle(current_queue)
         next_queue: list[Node] = []
         for node in current_queue:
-            # Power (check each neighbor)
+            # Power
+            max_neighbor_power = 0
             for dx, dy in zip(util.D_X, util.D_Y):
                 x1 = node.x + dx
                 y1 = node.y + dy
@@ -126,7 +127,8 @@ def fill(board: Board, size: int):
                     continue
                 neighbor = board.board[x1][y1]
                 if neighbor.tuple() in visited_nodes:
-                    node.power = max(0, node.power, neighbor.power - (1 if random.random() < 0.25 else 2))
+                    max_neighbor_power = max(max_neighbor_power, neighbor.power)
+            node.power = max(0, max_neighbor_power - (1 if random.random() < 0.40 else 0))
             # Add neighbors
             for dx, dy in zip(util.D_X, util.D_Y):
                 x1 = node.x + dx

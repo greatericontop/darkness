@@ -24,7 +24,7 @@ TITLE_W = 240
 TITLE_H = 35
 BOARD_SIZE = 24
 THICKNESS = 10
-CELL_SIZE = 120 #from 440
+CELL_SIZE = 100 #from 440
 OPENING_BUFFER_SIZE = THICKNESS + 10 #from +135
 PLAYER_SIZE = 5 #from 15
 PLAYER_ACCEL = 0.25 #from 0.65
@@ -167,25 +167,22 @@ class Game:
             for y in range(BOARD_SIZE):
                 x_c = int(x * CELL_SIZE + self.alignment_x)
                 y_c = int(y * CELL_SIZE + self.alignment_y)
-                power = self.board.board[x][y].power
-                if power >= 11:
-                    color = 0xa0a0a0
-                elif power >= 1:
-                    color = 0x808080
-                else:
-                    color = 0x606060
-                cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else color
+                node_power_color = self.board.board[x][y].color()
+                cell_color = 0xffffff if x == self.board.maze_exit_x and y == self.board.maze_exit_y else node_power_color
                 pygame.draw.rect(self.canvas, cell_color,
                                  pygame.Rect(x_c + THICKNESS, y_c + THICKNESS, CELL_SIZE - 2 * THICKNESS,
                                              CELL_SIZE - 2 * THICKNESS))
                 # Left sided edge
                 if self.board.board[x][y].connections[D.LEFT]:
-                    pygame.draw.rect(self.canvas, 0x707070,
+                    # edge color is the darker of the two node colors
+                    edge_color = min(node_power_color, self.board.board[x-1][y].color())
+                    pygame.draw.rect(self.canvas, edge_color,
                                      pygame.Rect(x_c - THICKNESS, y_c + OPENING_BUFFER_SIZE, 2 * THICKNESS,
                                                  CELL_SIZE - 2 * OPENING_BUFFER_SIZE))
                 # Top sided edge
                 if self.board.board[x][y].connections[D.UP]:
-                    pygame.draw.rect(self.canvas, 0x707070,
+                    edge_color = min(node_power_color, self.board.board[x][y-1].color())
+                    pygame.draw.rect(self.canvas, edge_color,
                                      pygame.Rect(x_c + OPENING_BUFFER_SIZE, y_c - THICKNESS,
                                                  CELL_SIZE - 2 * OPENING_BUFFER_SIZE, 2 * THICKNESS))
         # Player
